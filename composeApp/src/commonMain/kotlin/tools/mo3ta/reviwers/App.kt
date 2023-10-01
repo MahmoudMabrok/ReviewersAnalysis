@@ -14,17 +14,6 @@ import tools.mo3ta.reviwers.screens.PullsScreen
 import tools.mo3ta.reviwers.theme.AppTheme
 
 @Composable
-fun ReviewerAnalysis(
-    content: @Composable () -> Unit
-) {
-    MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme.copy(primary = Color.Black),
-    ) {
-        content()
-    }
-}
-
-@Composable
 internal fun App(
     systemAppearance: (isLight: Boolean) -> Unit = {}
 ) = AppTheme(systemAppearance) {

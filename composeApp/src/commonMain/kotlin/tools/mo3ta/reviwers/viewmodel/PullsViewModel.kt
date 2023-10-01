@@ -63,7 +63,7 @@ const val COMMENETS_RECEIVED= "comments_received";
 
 class PullsViewModel(data: PullsScreenData) : ViewModel() {
 
-    val pageSize = 100
+    val pageSize = 50
 
     private val githubKey = data.apiKey
     private val ownerWithRepo  = data.ownerWithRepo

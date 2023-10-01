@@ -59,6 +59,7 @@ kotlin {
                 api("dev.icerock.moko:mvvm-compose:0.16.1") // api mvvm-core, getViewModel for Compose Multiplatfrom
                 // implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
                 implementation("com.russhwolf:multiplatform-settings-no-arg:1.0.0")
+                implementation("io.github.thechance101:chart:Beta-0.0.5")
             }
         }
 

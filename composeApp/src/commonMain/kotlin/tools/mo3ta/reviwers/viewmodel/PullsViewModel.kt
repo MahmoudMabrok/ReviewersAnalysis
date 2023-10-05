@@ -8,7 +8,11 @@ import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpHeaders
+import io.ktor.serialization.JsonConvertException
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,7 +26,9 @@ import tools.mo3ta.reviwers.model.Review
 import tools.mo3ta.reviwers.model.User
 import tools.mo3ta.reviwers.model.UserReviews
 import tools.mo3ta.reviwers.screens.PullsScreenData
+import tools.mo3ta.reviwers.utils.formatDate
 import tools.mo3ta.reviwers.utils.getCoverage
+import tools.mo3ta.reviwers.utils.lastDate
 
 
 data class UserContribution(
@@ -44,11 +50,12 @@ data class UserContribution(
 }
 
 data class PullsUiState(
-    val currentPage: Int = 1,
+    val currentPage: Int = 8,
     val pulls: Int = 0,
     val data: List<UserContribution> = emptyList(),
     val isLoading:Boolean = false,
     val isNextShown:Boolean = true,
+    val lastDate :String = "",
     val sortTypes: SortTypes = SortTypes.APPROVALS,
 )
 
@@ -63,18 +70,23 @@ const val COMMENETS_RECEIVED= "comments_received";
 
 class PullsViewModel(data: PullsScreenData) : ViewModel() {
 
-    val pageSize = 50
+    val pageSize = 100
 
     private val githubKey = data.apiKey
     private val ownerWithRepo  = data.ownerWithRepo
     private val isEnterprise  = data.isEnterprise
     private val enterprise  = data.enterprise
 
+    private val urlPrefix = prepareUrl(isEnterprise, enterprise)
+
     private var totalReviews:MutableList<UserReviews> = mutableListOf()
     private var totalCoverage:MutableList<Coverage> = mutableListOf()
 
     private val _uiState = MutableStateFlow(PullsUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val allUserContinuations = mutableListOf<UserContribution>()
+    private val allPullRequests = mutableListOf<PullRequest>()
 
     private val httpClient = HttpClient {
         install(ContentNegotiation) {
@@ -93,33 +105,67 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
             it.copy(isLoading = true)
         }
 
-        viewModelScope.launch {
+        val handler = CoroutineExceptionHandler { _, _ ->
+            _uiState.update {
+               it.copy(isLoading = false)
+            }
+        }
+
+        viewModelScope.launch(handler) {
             val pullRequests = loadPullRequests(_uiState.value.currentPage)
 
-            _uiState.update {
-                it.copy(isNextShown = pullRequests.size == pageSize)
+            allPullRequests.addAll(pullRequests)
+
+            val lastDate = lastDate(pullRequests.map { formatDate(it.created_at ?: "") })
+
+            _uiState.update { it ->
+                it.copy(isNextShown = pullRequests.size == pageSize, lastDate = lastDate)
             }
 
             val requests = pullRequests.map {
                 val reviewJob = launch {
-                   // val reviews = async {  loadReviews(it.number, it.user) }.await()
-                    val reviews = loadReviews(it)
-                    totalReviews.addAll(reviews)
+                    try {
+                        val reviews = async {  loadReviews(it) }.await()
+                        //val reviews = loadReviews(it)
+                        totalReviews.addAll(reviews)
+                    }catch (e :Exception){
+                        println("error , reviews  ${it.number}")
+                    }
+
                 }
                 val commentsJob = launch {
-                    // val reviews = async {  loadReviews(it.number, it.user) }.await()
-                    val comments = loadComments(it.number, it.user)
-                    totalReviews.addAll(comments)
+                    try {
+                        val comments = async {  loadComments(it.number, it.user) }.await()
+                        // val comments = loadComments(it.number, it.user)
+                        totalReviews.addAll(comments)
+                    }catch (e :Exception){
+                        println("error , comments  ${it.number}")
+                    }
                 }
 
                 val qualityJob = launch {
-                   // val coverages = async {  loadCoverages(it.number, it.user)}.await()
-                    val coverages = loadCoverages(it.number, it.user)
-                    totalCoverage.addAll(coverages)
+                    try {
+                        // val coverages = async {  loadCoverages(it.number, it.user)}.await()
+                        val coverages = loadCoverages(it.number, it.user)
+                        totalCoverage.addAll(coverages)
+                    }catch (e :Exception){
+                        println("error , totalCoverage $e")
+                    }
+
                 }
                 listOf(reviewJob , qualityJob, commentsJob)
             }
-            requests.flatten().joinAll()
+            try {
+                requests.flatten().joinAll()
+            }catch (_: CancellationException){
+
+            }catch (e: JsonConvertException){
+                _uiState.update {
+                  it.copy(isLoading = false)
+                }
+                return@launch
+            }
+
 
             val data = totalReviews.groupBy { it.user }.map { (user, work) ->
                 UserContribution(user,
@@ -131,15 +177,17 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
                 )
             }.sortedByDescending { sort(_uiState.value.sortTypes, it) }
 
+            allUserContinuations.clear()
+            allUserContinuations.addAll(data)
+
             _uiState.update {
                 val totalCount = it.pulls + pullRequests.size
-                it.copy(pulls = totalCount ,data = data , isLoading = false , currentPage = (_uiState.value.currentPage + 1))
+                it.copy(pulls = totalCount ,data = allUserContinuations , isLoading = false , currentPage = (_uiState.value.currentPage + 1))
             }
         }
     }
 
     private suspend  fun loadPullRequests(page:Int = 1): List<PullRequest> {
-        val urlPrefix = prepareUrl(isEnterprise, enterprise)
         return httpClient
             .get("https://$urlPrefix/repos/${ownerWithRepo}/pulls") {
                 headers {
@@ -162,20 +210,18 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
         }
     }
 
-
     private suspend fun loadReviews(pullRequest: PullRequest): List<UserReviews> {
-        val urlPrefix = prepareUrl(isEnterprise, enterprise)
         val allReviews =  httpClient
             .get("https://$urlPrefix/repos/${ownerWithRepo}/pulls/${pullRequest.number}/reviews") {
                 headers {
                     append(HttpHeaders.Authorization, "Bearer $githubKey")
                 }
             }
-            .body<List<Review>>().filter { it.state == APPROVE }
+            .body<List<Review>>().filter { it.state == APPROVE  && it.user != null }
 
         val allData = mutableListOf<UserReviews>()
         val approvals = allReviews.map {
-               UserReviews(it.user.login, APPROVE, date = it.submitted_at)
+               UserReviews(it.user!!.login, APPROVE, date = it.submitted_at)
         }
 
         allData.addAll(approvals)
@@ -185,7 +231,6 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
     }
 
     private suspend fun loadComments(number: Int, user: User): List<UserReviews> {
-        val urlPrefix = prepareUrl(isEnterprise, enterprise)
         val allComments =  httpClient
             .get("https://$urlPrefix/repos/${ownerWithRepo}/pulls/${number}/comments") {
                 headers {
@@ -193,15 +238,14 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
                 }
             }
             .body<List<Review>>()
-            .filter { it.user.login != user.login }
-            .map { UserReviews(it.user.login, state = COMMENETS, date = it.updated_at, body = it.body, commentsTo = user.login)}
+            .filter { it.user != null && user.login != it.user.login }
+            .map { UserReviews(it.user!!.login, state = COMMENETS, date = it.updated_at, body = it.body, commentsTo = user.login)}
 
         return allComments
     }
 
     private suspend fun loadCoverages(number: Int, user: User): List<Coverage> {
-        val urlPrefix = prepareUrl(isEnterprise, enterprise)
-        val coverageComment = httpClient
+       val coverageComment = httpClient
             .get("https://$urlPrefix/repos/${ownerWithRepo}/issues/${number}/comments") {
                 headers {
                     append(HttpHeaders.Authorization, "Bearer $githubKey")
@@ -211,7 +255,6 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
 
         val coverage = coverageComment?.body?.getCoverage()
 
-
         return mutableListOf<Coverage>().apply {
             coverageComment?.let { comment ->
                 coverage?.let {
@@ -220,11 +263,6 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
             }
 
         }
-    }
-
-
-    override fun onCleared() {
-        httpClient.close()
     }
 
     fun onChangeFilter(type: SortTypes) {
@@ -238,6 +276,21 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
         SortTypes.COMMENTS.name -> it.commented.size
         SortTypes.QUALITY.name -> if (it.quality.isEmpty()) 0 else it.quality.map { it.quality }.average().toInt()
         else -> it.receivedComments.size
+    }
+
+    fun onSearchQuery(query:String){
+        val result = if (query.isBlank()){
+           allUserContinuations
+        }else {
+            allUserContinuations.filter { it.user.lowercase().contains(query) }
+        }
+        _uiState.update {
+            it.copy(data = result)
+        }
+    }
+
+    override fun onCleared() {
+        httpClient.close()
     }
 }
 

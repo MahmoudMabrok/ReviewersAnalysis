@@ -8,4 +8,4 @@ show some analysis for repo by showing user with counts of approved pull request
 
 
 # Guide 
-use next wiki to get more info on [installation](https://github.com/MahmoudMabrok/ReviewersAnalysis/wiki/Installation-&-template)https://github.com/MahmoudMabrok/ReviewersAnalysis/wiki/Installation-&-template 
+use next wiki to get more info on [installation](https://github.com/MahmoudMabrok/ReviewersAnalysis/wiki/Installation-&-template)

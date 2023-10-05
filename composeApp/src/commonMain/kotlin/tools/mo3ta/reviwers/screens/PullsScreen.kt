@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -71,7 +72,9 @@ data class PullsScreen(val data: PullsScreenData) : Screen {
 
                 item (span = { GridItemSpan(maxLineSpan)}){
                     if (uiState.isNextShown){
-                        Button(onClick = {
+                        Button(
+                            modifier = Modifier.wrapContentSize(),
+                            onClick = {
                             viewModel.getPulls()
                         }){
                             Text("Next Page ${ uiState.currentPage}")

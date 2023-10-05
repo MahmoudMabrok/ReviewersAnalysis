@@ -81,15 +81,6 @@ data class ChartsScreen(val userData: UserContribution ) : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
 
-        val testLineParameters: List<LineParameters> = listOf(
-            LineParameters(
-                label = "coverage",
-                data = userData.quality.map { it.quality.toDouble() },
-                lineColor = Color.Gray,
-                lineType = LineType.DEFAULT_LINE,
-                lineShadow = true,
-            ),
-        )
 
         Column (
             modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()),
@@ -124,36 +115,13 @@ data class ChartsScreen(val userData: UserContribution ) : Screen {
 
             Divider()
 
-
-
            if (userData.quality.isNotEmpty()){
-               Text("Coverage")
+               Text("Coverage : ")
 
                Divider()
 
-               Box(Modifier.fillMaxWidth().height(400.dp).padding(16.dp)) {
-                   LineChart(
-                       modifier = Modifier.fillMaxWidth(),
-                       linesParameters = testLineParameters,
-                       isGrid = true,
-                       gridColor = Color.Blue,
-                       xAxisData = List(testLineParameters.first().data.size){""},
-                       showXAxis = false,
-                       showYAxis = false,
-                       animateChart = true,
-                       showGridWithSpacer = true,
-                       yAxisStyle = TextStyle(
-                           fontSize = 14.sp,
-                           color = Color.Gray,
-                       ),
-                       xAxisStyle = TextStyle(
-                           fontSize = 14.sp,
-                           color = Color.Gray,
-                           fontWeight = FontWeight.W400
-                       ),
-                       yAxisRange = userData.quality.maxOfOrNull { it.quality }?.toInt() ?: 100,
-                       gridOrientation = GridOrientation.VERTICAL,
-                   )
+               userData.quality.sortedByDescending { formatDate(it.updated_at ?: "") }.map {
+                   Text("${formatDate(it.updated_at ?: "")} :: ${it.quality}")
                }
            }
 

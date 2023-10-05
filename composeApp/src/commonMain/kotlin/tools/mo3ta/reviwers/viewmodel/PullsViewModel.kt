@@ -50,7 +50,7 @@ data class UserContribution(
 }
 
 data class PullsUiState(
-    val currentPage: Int = 8,
+    val currentPage: Int = 1,
     val pulls: Int = 0,
     val data: List<UserContribution> = emptyList(),
     val isLoading:Boolean = false,
@@ -183,6 +183,10 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
             _uiState.update {
                 val totalCount = it.pulls + pullRequests.size
                 it.copy(pulls = totalCount ,data = allUserContinuations , isLoading = false , currentPage = (_uiState.value.currentPage + 1))
+            }
+
+            if (_uiState.value.currentPage < 12){
+                getPulls()
             }
         }
     }

@@ -1,26 +1,11 @@
-# Compose Multiplatform Application
+# Reviewer Analysis App
+show some analysis for repo by showing user with counts of approved pull requests and other data. 
 
-## Before running!
- - check your system with [KDoctor](https://github.com/Kotlin/kdoctor)
- - install JDK 8 on your machine
- - add `local.properties` file to the project root and set a path to Android SDK there
+# Test 
+- check webiste [here](https://mahmoudmabrok.github.io/ReviewersAnalysis/) 
 
-### Android
-To run the application on android device/emulator:  
- - open project in Android Studio and run imported android run configuration
 
-To build the application bundle:
- - run `./gradlew :composeApp:assembleDebug`
- - find `.apk` file in `composeApp/build/outputs/apk/debug/composeApp-debug.apk`
 
-### Desktop
-Run the desktop application: `./gradlew :composeApp:run`
 
-### iOS
-To run the application on iPhone device/simulator:
- - Open `iosApp/iosApp.xcproject` in Xcode and run standard configuration
- - Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio
-
-### Browser
-Run the browser application: `./gradlew :composeApp:jsBrowserDevelopmentRun`
-
+# Guide 
+use next wiki to get more info on [installation](https://github.com/MahmoudMabrok/ReviewersAnalysis/wiki/Installation-&-template)https://github.com/MahmoudMabrok/ReviewersAnalysis/wiki/Installation-&-template 

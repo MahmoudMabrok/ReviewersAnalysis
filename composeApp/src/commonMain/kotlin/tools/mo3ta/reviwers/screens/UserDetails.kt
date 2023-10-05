@@ -1,5 +1,6 @@
 package tools.mo3ta.reviwers.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
@@ -28,7 +30,7 @@ data class UserDetails(val userData: UserContribution ) : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         var comments by rememberSaveable { mutableStateOf(userData.commented) }
-        var myComments by rememberSaveable { mutableStateOf(true) }
+        var isMyCommentsSelected by rememberSaveable { mutableStateOf(true) }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -56,26 +58,30 @@ data class UserDetails(val userData: UserContribution ) : Screen {
                 Divider()
 
                 Row {
-                    Button(onClick = {
-                        comments = userData.commented
-                        myComments = true
-                    }){
-                        Text("(${userData.commented.size}) Comments wrote")
-                    }
+                    Text(
+                        modifier = Modifier
+                            .clickable {
+                            comments = userData.commented
+                            isMyCommentsSelected = true
+                        } .padding(16.dp),
+                        text = "(${userData.commented.size}) Comments wrote",
+                        textDecoration = if (isMyCommentsSelected) TextDecoration.Underline else TextDecoration.None )
 
                     Divider()
 
-                    Button(onClick = {
-                        comments = userData.receivedComments
-                        myComments = false
-                    }){
-                        Text("(${userData.receivedComments.size}) Comments received")
-                    }
+                    Text(
+                        modifier = Modifier.clickable {
+                            comments = userData.receivedComments
+                            isMyCommentsSelected = false
+                        } .padding(16.dp),
+                        text ="(${userData.receivedComments.size}) Comments received",
+                        textDecoration = if (isMyCommentsSelected) TextDecoration.None else TextDecoration.Underline )
+
                 }
             }
 
             items(comments){
-                Comments(it, myComments)
+                Comments(it, isMyCommentsSelected)
             }
         }
     }

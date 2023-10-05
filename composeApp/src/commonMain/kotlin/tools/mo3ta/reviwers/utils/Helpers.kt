@@ -18,3 +18,8 @@ fun formatDate(date:String): String {
 }
 
 
+fun lastDate(data: List<String>): String {
+    return data.minOf { it }
+}
+
+

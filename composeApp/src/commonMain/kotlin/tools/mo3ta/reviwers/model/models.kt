@@ -14,7 +14,7 @@ data class PullRequest(val number:Int,
 
 @Serializable
 data class Review(
-    val user: User,
+    val user: User? = null, // some calls not return data for user so it is nullable.
     val state: String?=null,
     val updated_at: String?= null,
     val submitted_at: String?= null,

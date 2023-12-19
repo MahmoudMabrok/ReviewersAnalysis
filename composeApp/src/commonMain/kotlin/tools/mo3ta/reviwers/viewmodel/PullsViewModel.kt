@@ -70,12 +70,14 @@ const val COMMENETS_RECEIVED= "comments_received";
 
 class PullsViewModel(data: PullsScreenData) : ViewModel() {
 
-    val pageSize = 100
+
 
     private val githubKey = data.apiKey
     private val ownerWithRepo  = data.ownerWithRepo
     private val isEnterprise  = data.isEnterprise
     private val enterprise  = data.enterprise
+    private val pageSize = data.pageSize
+    private val lastPageNumber = data.lastPageNumber
 
     private val urlPrefix = prepareUrl(isEnterprise, enterprise)
 
@@ -185,7 +187,7 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
                 it.copy(pulls = totalCount ,data = allUserContinuations , isLoading = false , currentPage = (_uiState.value.currentPage + 1))
             }
 
-            if (_uiState.value.currentPage < 12){
+            if (_uiState.value.currentPage < lastPageNumber){
                 getPulls()
             }
         }

@@ -32,6 +32,8 @@ object Keys {
     const val OWNER_REPO = "OWNER_REPO";
     const val IS_ENTERPRISE = "IS_ENTERPRISE";
     const val ENTERPRISE = "ENTERPRISE";
+    const val PAGE_SIZE = "PAGE_SIZE";
+    const val LAST_PAGE_NUMBER = "LAST_PAGE_NUMBER";
 }
 
 
@@ -48,7 +50,6 @@ object ConfigScreen : Screen {
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(32.dp),
             modifier = Modifier.fillMaxSize().padding(16.dp).background(
                 Color(0XFFAAFF)
             )
@@ -60,33 +61,47 @@ object ConfigScreen : Screen {
             var ownerWithRepo by rememberSaveable { mutableStateOf(settings.getString(Keys.OWNER_REPO, ""))}
             var isEnterprise by rememberSaveable { mutableStateOf(settings.getBoolean(Keys.IS_ENTERPRISE, false))}
             var enterprise by rememberSaveable { mutableStateOf(settings.getString(Keys.ENTERPRISE, ""))}
+            var pageSize by rememberSaveable { mutableStateOf(settings.getInt(Keys.PAGE_SIZE, 10))}
+            var lastPageNumber by rememberSaveable { mutableStateOf(settings.getInt(Keys.LAST_PAGE_NUMBER, 1))}
 
-            Text("Config data:", fontSize = 32.sp)
-            LabeledContent("github api key"){
-                TextField(value = githubKey , singleLine = true, onValueChange = {value -> githubKey = value})
-            }
+          Column (
+              horizontalAlignment = Alignment.Start,
+              verticalArrangement = Arrangement.spacedBy(32.dp),
+          ){
+              Text("Config data:", fontSize = 32.sp)
+              LabeledContent("github api key"){
+                  TextField(value = githubKey , singleLine = true, onValueChange = {value -> githubKey = value})
+              }
+              LabeledContent("user/repo:"){
+                  TextField(value = ownerWithRepo , onValueChange = {value -> ownerWithRepo = value})
+              }
+              LabeledContent("pageSize:"){
+                  TextField(value = pageSize.toString() , onValueChange = {value -> pageSize = value.toIntOrNull() ?: 0})
+              }
+              LabeledContent("lastPageNumber:"){
+                  TextField(value = lastPageNumber.toString() , onValueChange = {value -> lastPageNumber = value.toIntOrNull() ?: 0})
+              }
+              LabeledContent("is Enterprise ?"){
+                  Checkbox(checked = isEnterprise, onCheckedChange = { state -> isEnterprise = state})
+              }
+              if (isEnterprise){
+                  LabeledContent("Enterprise name:"){
+                      TextField(value = enterprise , singleLine = true, onValueChange = {value -> enterprise = value})
+                  }
+              }
+              Button(onClick = {
+                  settings.putString(Keys.API_KEY, githubKey)
+                  settings.putString(Keys.OWNER_REPO, ownerWithRepo)
+                  settings.putBoolean(Keys.IS_ENTERPRISE, isEnterprise)
+                  settings.putString(Keys.ENTERPRISE, enterprise)
+                  settings.putInt(Keys.PAGE_SIZE, pageSize)
+                  settings.putInt(Keys.LAST_PAGE_NUMBER, lastPageNumber)
 
-            LabeledContent("user/repo:"){
-                TextField(value = ownerWithRepo , onValueChange = {value -> ownerWithRepo = value})
-            }
-            LabeledContent("is Enterprise ?"){
-                Checkbox(checked = isEnterprise, onCheckedChange = { state -> isEnterprise = state})
-            }
-            if (isEnterprise){
-                LabeledContent("Enterprise name:"){
-                    TextField(value = enterprise , singleLine = true, onValueChange = {value -> enterprise = value})
-                }
-            }
-            Button(onClick = {
-                settings.putString(Keys.API_KEY, githubKey)
-                settings.putString(Keys.OWNER_REPO, ownerWithRepo)
-                settings.putBoolean(Keys.IS_ENTERPRISE, isEnterprise)
-                settings.putString(Keys.ENTERPRISE, enterprise)
-
-                navigator.push(PullsScreen(PullsScreenData(githubKey, ownerWithRepo, isEnterprise, enterprise)))
-            }, modifier = Modifier.align(Alignment.CenterHorizontally)){
-                Text("Fire")
-            }
+                  navigator.push(PullsScreen(PullsScreenData(githubKey, ownerWithRepo, isEnterprise, enterprise)))
+              }, modifier = Modifier.align(Alignment.CenterHorizontally)){
+                  Text("Fire")
+              }
+          }
 
         }
     }

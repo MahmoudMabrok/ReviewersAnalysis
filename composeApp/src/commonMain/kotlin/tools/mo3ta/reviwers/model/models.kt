@@ -2,6 +2,7 @@ package tools.mo3ta.reviwers.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import tools.mo3ta.reviwers.utils.getTimeRange
 
 @Serializable
 data class PullRequest(val number:Int,
@@ -10,7 +11,13 @@ data class PullRequest(val number:Int,
                        val created_at :String? = null,
                        val updated_at :String? = null,
                        val closed_at :String? = null,
-    )
+                       val merged_at :String? = null,
+    ){
+
+    val mergeTime = if (created_at != null && merged_at != null){
+        getTimeRange(created_at, merged_at)
+    }else -1L
+}
 
 @Serializable
 data class Review(

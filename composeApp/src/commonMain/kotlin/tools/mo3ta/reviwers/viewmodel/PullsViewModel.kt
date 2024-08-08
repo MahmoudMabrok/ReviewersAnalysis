@@ -25,7 +25,7 @@ import tools.mo3ta.reviwers.model.PullRequest
 import tools.mo3ta.reviwers.model.Review
 import tools.mo3ta.reviwers.model.User
 import tools.mo3ta.reviwers.model.UserReviews
-import tools.mo3ta.reviwers.screens.PullsScreenData
+import tools.mo3ta.reviwers.screens.PullsData
 import tools.mo3ta.reviwers.utils.formatDate
 import tools.mo3ta.reviwers.utils.getCoverage
 import tools.mo3ta.reviwers.utils.lastDate
@@ -68,9 +68,7 @@ const val CREATED= "CREATED";
 const val COMMENETS= "COMMENTED";
 const val COMMENETS_RECEIVED= "comments_received";
 
-class PullsViewModel(data: PullsScreenData) : ViewModel() {
-
-
+class PullsViewModel(data: PullsData) : ViewModel() {
 
     private val githubKey = data.apiKey
     private val ownerWithRepo  = data.ownerWithRepo
@@ -102,15 +100,18 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
          getPulls()
     }
 
-    fun getPulls() {
-        _uiState.update {
-            it.copy(isLoading = true)
-        }
 
+
+
+    fun getPulls() {
         val handler = CoroutineExceptionHandler { _, _ ->
             _uiState.update {
-               it.copy(isLoading = false)
+                it.copy(isLoading = false)
             }
+        }
+
+        _uiState.update {
+            it.copy(isLoading = true)
         }
 
         viewModelScope.launch(handler) {
@@ -128,7 +129,6 @@ class PullsViewModel(data: PullsScreenData) : ViewModel() {
                 val reviewJob = launch {
                     try {
                         val reviews = async {  loadReviews(it) }.await()
-                        //val reviews = loadReviews(it)
                         totalReviews.addAll(reviews)
                     }catch (e :Exception){
                         println("error , reviews  ${it.number}")

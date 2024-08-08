@@ -36,15 +36,15 @@ import tools.mo3ta.reviwers.components.SortGroup
 import tools.mo3ta.reviwers.components.UserItem
 import tools.mo3ta.reviwers.viewmodel.PullsViewModel
 
-data class PullsScreenData(val apiKey:String,
-                           val ownerWithRepo:String,
-                           val isEnterprise:Boolean,
-                           val enterprise:String,
-                           val pageSize: Int = 10,
-                           val lastPageNumber: Int = 1 )
+data class PullsData(val apiKey:String,
+                     val ownerWithRepo:String,
+                     val isEnterprise:Boolean,
+                     val enterprise:String,
+                     val pageSize: Int = 10,
+                     val lastPageNumber: Int = 1 )
 
 
-data class PullsScreen(val data: PullsScreenData) : Screen {
+data class PRReviewAnalysisScreen(val data: PullsData) : Screen {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun Content() {

@@ -69,6 +69,10 @@ kotlin {
             }
         }
 
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
+
         val androidMain by getting {
             dependencies {
                 implementation(libs.androidx.appcompat)
@@ -146,3 +150,10 @@ libres {
 tasks.getByPath("desktopProcessResources").dependsOn("libresGenerateResources")
 tasks.getByPath("desktopSourcesJar").dependsOn("libresGenerateResources")
 tasks.getByPath("jsProcessResources").dependsOn("libresGenerateResources")
+
+
+dependencies {
+    testImplementation(
+        "junit:junit:4.12"
+    )
+}

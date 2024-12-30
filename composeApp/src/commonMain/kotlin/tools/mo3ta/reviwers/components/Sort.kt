@@ -32,6 +32,20 @@ fun SortGroup(sortTypes: SortTypes, onClick: (SortTypes) -> Unit ) {
     }
 }
 
+@Composable
+fun SortGroupItems(selected: String, data: List<String> , onClick: (String) -> Unit){
+    Column(
+        horizontalAlignment = Alignment.Start ,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        data.map {
+            LabelRadio(isSelected = selected == it, text = it){
+                onClick(it)
+            }
+        }
+    }
+}
+
 
 
 @Composable
